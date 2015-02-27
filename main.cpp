@@ -1,37 +1,40 @@
-#include <SFML/Graphics.hpp>
+#include "Lib/Application.hpp"
+
+#include "State/IntroState.hpp"
+#include "State/MenuState.hpp"
+#include "State/GameState.hpp"
 
 int main()
 {
-    // Create the main window
-    sf::RenderWindow app(sf::VideoMode(800, 600), "SFML window");
-
-    // Load a sprite to display
-    sf::Texture texture;
-    if (!texture.loadFromFile("cb.bmp"))
-        return EXIT_FAILURE;
-    sf::Sprite sprite(texture);
-
-	// Start the game loop
-    while (app.isOpen())
+    try
     {
-        // Process events
-        sf::Event event;
-        while (app.pollEvent(event))
-        {
-            // Close window : exit
-            if (event.type == sf::Event::Closed)
-                app.close();
-        }
+        cf::Application app;
 
-        // Clear screen
-        app.clear();
+        /*
 
-        // Draw the sprite
-        app.draw(sprite);
+        -> Chargement des resources
+        -> Parametrage de la fenetre
+        -> Gestion des Log
+        -> Gestion de l'audio
+        -> Gestion des Statistics
+        -> ...
+        -> Enfin bref, tout ce qui est plus ou moins une partie de l'Application
 
-        // Update the window
-        app.display();
+        */
+
+        app.getWindow().create(800,600,sf::Style::Close);
+
+        app.getStates().registerState<IntroState>(IntroState::getID());
+        app.getStates().registerState<MenuState>(MenuState::getID());
+        app.getStates().registerState<GameState>(GameState::getID());
+
+        app.getStates().pushState(IntroState::getID());
+
+        app.run();
     }
-
+    catch(std::exception& e)
+    {
+        std::cerr << e.what() << std::endl;
+    }
     return EXIT_SUCCESS;
 }
