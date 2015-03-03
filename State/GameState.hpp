@@ -4,6 +4,9 @@
 #include "../Lib/State.hpp"
 
 #include "MenuState.hpp"
+#include "GameModeState.hpp"
+
+#include "../Game/World.hpp"
 
 class GameState : public cf::State
 {
@@ -21,6 +24,9 @@ class GameState : public cf::State
 
     protected:
         void toMenu();
+
+    protected:
+        World mWorld;
 
 };
 

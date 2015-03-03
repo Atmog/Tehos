@@ -3,7 +3,9 @@
 
 #include "../Lib/State.hpp"
 
-#include "GameState.hpp"
+#include "../Lib/Container.hpp"
+
+#include "GameModeState.hpp"
 
 class MenuState : public cf::State
 {
@@ -20,7 +22,10 @@ class MenuState : public cf::State
         void render();
 
     protected:
-        void toGame();
+        void toGameMode();
+
+    protected:
+        cf::Container mGUI;
 
 };
 

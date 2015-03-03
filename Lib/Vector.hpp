@@ -7,22 +7,11 @@
 namespace cf
 {
 
-float length(sf::Vector2f v)
-{
-    return std::sqrt(v.x * v.x + v.y * v.y);
-}
+float length(sf::Vector2f v);
 
-float distance(sf::Vector2f v1, sf::Vector2f v2)
-{
-    return std::sqrt((v2.x-v1.x) * (v2.x-v1.x) + (v2.y-v1.y) * (v2.y-v1.y));
-}
+float distance(sf::Vector2f v1, sf::Vector2f v2);
 
-void rotate(sf::Vector2f& v, float deg)
-{
-    float c = cf::cos(deg);
-    float s = cf::sin(deg);
-    v = sf::Vector2f(c * v.x - s * v.y, s * v.x + c * v.y);
-}
+void rotate(sf::Vector2f& v, float deg);
 
 }
 

@@ -1,21 +1,9 @@
-#include "MenuState.hpp"
+#include "GameModeState.hpp"
 
-MenuState::MenuState(cf::StateManager& manager)
+GameModeState::GameModeState(cf::StateManager& manager)
 : cf::State(manager)
 {
-    auto shadow = mGUI.newLabel();
-    shadow->setFont(cf::Application::getResources().getFont("Assets/Fonts/sansation.ttf"));
-    shadow->setString("Tehos");
-    shadow->setCharacterSize(60);
-    shadow->setPosition(400-shadow->cf::Text::getSize().x/2+5,10+5);
-    shadow->setColor(sf::Color::Black);
-
-    auto title = mGUI.newLabel();
-    title->setFont(cf::Application::getResources().getFont("Assets/Fonts/sansation.ttf"));
-    title->setString("Tehos");
-    title->setCharacterSize(60);
-    title->setPosition(400-shadow->cf::Text::getSize().x/2,10);
-    title->setColor(sf::Color::White);
+    mGameMode = World::GameMode::Survival;
 
     auto buttonPlay = mGUI.newButton();
     buttonPlay->setPosition(sf::Vector2f(400-175,100));
@@ -24,11 +12,11 @@ MenuState::MenuState(cf::StateManager& manager)
     buttonPlay->setTextureRect(sf::IntRect(0,75,350,75),1);
     buttonPlay->setTextureRect(sf::IntRect(0,150,350,75),2);
     buttonPlay->setFont(cf::Application::getResources().getFont("Assets/Fonts/sansation.ttf"));
-    buttonPlay->setString("Play");
+    buttonPlay->setString("Survival");
     buttonPlay->setColor(sf::Color::Black);
     buttonPlay->setCallback([&] ()
     {
-        toGameMode();
+        toGame();
     },0);
     buttonPlay->setCallback([&] ()
     {
@@ -41,37 +29,63 @@ MenuState::MenuState(cf::StateManager& manager)
     buttonQuit->setTextureRect(sf::IntRect(0,75,350,75),1);
     buttonQuit->setTextureRect(sf::IntRect(0,150,350,75),2);
     buttonQuit->setFont(cf::Application::getResources().getFont("Assets/Fonts/sansation.ttf"));
-    buttonQuit->setString("Quit");
+    buttonQuit->setString("Return");
     buttonQuit->setColor(sf::Color::Black);
     buttonQuit->setCallback([&] ()
     {
-        requestClear();
+        toMenu();
     },0);
     buttonQuit->setCallback([&] ()
     {
     },1);
-
 }
 
-bool MenuState::handleEvent(sf::Event const& event)
+bool GameModeState::handleEvent(sf::Event const& event)
 {
     mGUI.handleEvent(event,cf::Application::getWindow());
     return true;
 }
 
-bool MenuState::update(sf::Time dt)
+bool GameModeState::update(sf::Time dt)
 {
     mGUI.update();
     return true;
 }
 
-void MenuState::render()
+void GameModeState::render()
 {
     cf::Application::getWindow().draw(mGUI);
 }
 
-void MenuState::toGameMode()
+World::GameMode GameModeState::getGameMode(std::string dataString)
+{
+    if (dataString == "deathmatch")
+        return World::GameMode::DeathMatch;
+    if (dataString == "domination")
+        return World::GameMode::Domination;
+    return World::GameMode::Survival;
+}
+
+std::string GameModeState::getGameModeString(World::GameMode gamemode)
+{
+    switch (gamemode)
+    {
+        case World::GameMode::DeathMatch: return "deathmatch"; break;
+        case World::GameMode::Domination: return "domination"; break;
+        default: return "survival"; break;
+    }
+}
+
+void GameModeState::toGame()
+{
+    cf::Application::getData().set("gamemode",getGameModeString(mGameMode));
+
+    requestPop();
+    requestPush(GameState::getID());
+}
+
+void GameModeState::toMenu()
 {
     requestPop();
-    requestPush(GameModeState::getID());
+    requestPush(MenuState::getID());
 }

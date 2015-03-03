@@ -12,6 +12,7 @@ bool IntroState::handleEvent(sf::Event const& event)
 
 bool IntroState::update(sf::Time dt)
 {
+    toMenu();
     return true;
 }
 
