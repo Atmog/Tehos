@@ -30,6 +30,8 @@ class SceneNode : public sf::Drawable, public sf::Transformable
 
         virtual bool remove() const;
 
+        sf::FloatRect getGlobalBounds() const;
+
     protected:
         World* mWorld;
         sf::Sprite mSprite;

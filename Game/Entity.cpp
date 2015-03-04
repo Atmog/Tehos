@@ -16,12 +16,14 @@ Entity::Entity(Targetable::Team team)
     mSprite.setTextureRect(sf::IntRect(0,mDirection*121,61,121));
     mSprite.setOrigin(sf::Vector2f(30.5,121));
     mSpeed = 100.f;
+    mMaxLife = 200.f;
+    mLife = 200.f;
     mWeapon = nullptr;
     mCollision->setPointCount(4);
-    mCollision->setPoint(0,sf::Vector2f(-20,-20));
-    mCollision->setPoint(1,sf::Vector2f(20,-20));
-    mCollision->setPoint(2,sf::Vector2f(20,10));
-    mCollision->setPoint(3,sf::Vector2f(-20,10));
+    mCollision->setPoint(0,sf::Vector2f(-10,-10));
+    mCollision->setPoint(1,sf::Vector2f(10,-10));
+    mCollision->setPoint(2,sf::Vector2f(10,5));
+    mCollision->setPoint(3,sf::Vector2f(-10,5));
 }
 
 void Entity::setWeapon(Weapon* weapon)
@@ -46,6 +48,13 @@ void Entity::update(sf::Time dt)
 
     if (mTarget == nullptr && mWorld != nullptr)
         mTarget = mWorld->findNearestTarget(this);
+
+    if (mTarget != nullptr && mWorld != nullptr)
+    {
+        Targetable::Ptr target = mWorld->findNearestTarget(this);
+        if (target != mTarget && cf::distance(mTarget->getPosition(),getPosition()) > cf::distance(target->getPosition(),getPosition()) + 10.f)
+            mTarget = target;
+    }
 
     if (mTarget != nullptr && mWorld != nullptr)
     {
@@ -84,7 +93,6 @@ void Entity::update(sf::Time dt)
             if (cf::distance(mTarget->getPosition(),getPosition()) < 50)
                 movement = sf::Vector2f(0,0);
 
-        // TODO : handle Collisions
         if (movement != sf::Vector2f(0,0))
         {
             mCollision->setPosition(getPosition());
@@ -127,6 +135,7 @@ void Entity::update(sf::Time dt)
             // TODO : PLAY SOUND ?
             // TODO : EFFECT ?
             mTarget = nullptr;
+            mWorld->addMoney(mTeam, 100);
         }
 
     }
@@ -144,6 +153,8 @@ void Entity::update(sf::Time dt)
 void Entity::draw(sf::RenderTarget& target, sf::RenderStates states) const
 {
     states.transform *= getTransform();
+
+    target.draw(*mCollision);
 
     if (mWeapon != nullptr && (mDirection == Entity::N || mDirection == Entity::NW))
     {

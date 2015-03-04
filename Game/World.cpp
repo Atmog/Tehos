@@ -53,14 +53,19 @@ void World::handleEvent(sf::Event const& event)
             if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left)
             {
                 sf::Vector2f mp = cf::Application::getWindow().getMousePositionView(mView);
-                if (mBlueMoney >= 100 && cf::distance(mp,mBaseBlue->getPosition()) < mBaseBlue->getSpawnRadius())
+                if (mBlueMoney >= 100 && cf::distance(mp,mBaseBlue->getPosition()) <= mBaseBlue->getSpawnRadius())
                 {
                     mBlueMoney -= 100;
                     Entity::Ptr e = std::make_shared<Entity>(Targetable::Blue);
                     e->setPosition(mp);
-                    e->setMaxLife(200);
-                    e->setLife(200);
                     addTargetable(e);
+                }
+                if (cf::distance(mp,mBaseBlue->getPosition()) > mBaseBlue->getSpawnRadius())
+                {
+                    mRenderBaseZone.restart();
+                }
+                if (mBlueMoney < 100)
+                {
                 }
             }
         }
@@ -74,9 +79,6 @@ void World::handleEvent(sf::Event const& event)
         else
             mView.zoom(0.8f);
     }
-
-    // Handle AI "Event"
-    handleAI();
 }
 
 void World::update(sf::Time dt)
@@ -105,6 +107,16 @@ void World::update(sf::Time dt)
     mTargetables.erase(std::remove_if(mTargetables.begin(), mTargetables.end(),
     [](Targetable::Ptr o) { return o->remove(); }), mTargetables.end());
     // TODO : EFFECT ?
+
+    mMoneyTime += dt;
+    if (mMoneyTime >= sf::seconds(0.1))
+    {
+        mMoneyTime = sf::Time::Zero;
+        mBlueMoney++;
+        mRedMoney++;
+    }
+
+    handleAI(dt);
 }
 
 void World::render()
@@ -115,8 +127,30 @@ void World::render()
     // Render Floor
     cf::Application::getWindow().draw(mFloor);
 
-    mBaseBlue->drawSpawnZone(cf::Application::getWindow());
-    mBaseRed->drawSpawnZone(cf::Application::getWindow());
+
+
+    if (cf::distance(mBaseBlue->getPosition(),cf::Application::getWindow().getMousePositionMap()) < 75
+    || (mRenderBaseZone.getElapsedTime() < sf::seconds(0.5)))
+    {
+        mBaseBlue->drawSpawnZone(cf::Application::getWindow());
+    }
+
+    if (cf::distance(mBaseRed->getPosition(),cf::Application::getWindow().getMousePositionMap()) < 75)
+    {
+        mBaseRed->drawSpawnZone(cf::Application::getWindow());
+    }
+
+    bool tB = false;
+    bool tR = false;
+    for (unsigned int i = 0; i < mSceneNodes.size(); i++)
+    {
+        if (mBaseBlue->getGlobalBounds().intersects(mSceneNodes[i]->getGlobalBounds()) && mBaseBlue->getPosition() != mSceneNodes[i]->getPosition())
+            tB = true;
+        if (mBaseRed->getGlobalBounds().intersects(mSceneNodes[i]->getGlobalBounds()) && mBaseRed->getPosition() != mSceneNodes[i]->getPosition())
+            tR = true;
+    }
+    mBaseBlue->transparence(tB);
+    mBaseRed->transparence(tR);
 
     // Sort SceneNodes
     std::sort(mSceneNodes.begin(), mSceneNodes.end(),[](SceneNode::Ptr a, SceneNode::Ptr b) -> bool { return a->getPosition().y < b->getPosition().y; });
@@ -131,13 +165,25 @@ void World::render()
         cf::Application::getWindow().draw(*mSceneNodes[i]);
     }
 
-    // Render UpperLevel
+    cf::Application::getWindow().draw(mCollisions);
 
     // Set Normal View
     cf::Application::getWindow().setDefaultView();
 
     // Draw HUD
     cf::Application::getWindow().draw(mHUD);
+}
+
+void World::addMoney(Targetable::Team team, int amount)
+{
+    if (team == Targetable::Team::Blue)
+    {
+        mBlueMoney += amount;
+    }
+    else if (team == Targetable::Team::Red)
+    {
+        mRedMoney += amount;
+    }
 }
 
 Targetable::Ptr World::findNearestTarget(Targetable* e)
@@ -257,7 +303,7 @@ void World::loadMap()
         {
             if (cf::random(0,100) > 98)
             {
-                //mMid.setTileId(sf::Vector2i(x,y),2);
+                mMid.setTileId(sf::Vector2i(x,y),2);
             }
         }
     }
@@ -288,7 +334,18 @@ void World::loadCollisionManager()
     }
 }
 
-void World::handleAI()
+void World::handleAI(sf::Time dt)
 {
+    if (mRedMoney >= 100 && mClock.getElapsedTime() >= sf::seconds(10))
+    {
+        mRedMoney -= 100;
+        Entity::Ptr e = std::make_shared<Entity>(Targetable::Red);
+        e->setPosition(sf::Vector2f(cf::randomDev(520.f,300.f),cf::randomDev(200.f,20.f)));
+        addTargetable(e);
+    }
 
+    if (mMode == World::GameMode::Survival)
+    {
+        // Money Bonus Over Elapsed Time
+    }
 }

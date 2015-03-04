@@ -29,3 +29,10 @@ bool SceneNode::remove() const
 {
     return false;
 }
+
+sf::FloatRect SceneNode::getGlobalBounds() const
+{
+    sf::Vector2f pos = getPosition()-mSprite.getOrigin();
+    sf::Vector2f size = sf::Vector2f(mSprite.getGlobalBounds().width,mSprite.getGlobalBounds().height);
+    return sf::FloatRect(pos,size);
+}

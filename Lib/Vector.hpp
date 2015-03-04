@@ -13,6 +13,8 @@ float distance(sf::Vector2f v1, sf::Vector2f v2);
 
 void rotate(sf::Vector2f& v, float deg);
 
+void normalize(sf::Vector2f& vector);
+
 }
 
 #endif // CONFICIA_VECTOR_HPP

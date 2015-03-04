@@ -20,4 +20,11 @@ void rotate(sf::Vector2f& v, float deg)
     v = sf::Vector2f(c * v.x - s * v.y, s * v.x + c * v.y);
 }
 
+void normalize(sf::Vector2f& vector)
+{
+    float length = cf::length(vector);
+    vector.x /= length;
+    vector.y /= length;
+}
+
 }

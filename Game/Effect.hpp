@@ -13,6 +13,8 @@ class Effect : public SceneNode
 
         Effect();
 
+        sf::Sprite& getSprite();
+
         void setLimit(sf::Time limit);
         sf::Time getLimit() const;
         sf::Time getActualTime() const;

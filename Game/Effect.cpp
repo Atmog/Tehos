@@ -5,6 +5,11 @@ Effect::Effect()
     mLimit = sf::Time::Zero;
 }
 
+sf::Sprite& Effect::getSprite()
+{
+    return mSprite;
+}
+
 void Effect::setLimit(sf::Time limit)
 {
     mLimit = limit;

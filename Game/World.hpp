@@ -51,6 +51,8 @@ class World
         GameEnd getEnd() const;
         GameMode getMode() const;
 
+        void addMoney(Targetable::Team team, int amount);
+
     protected:
         void addTargetable(Targetable::Ptr t);
 
@@ -61,7 +63,7 @@ class World
         void loadMap();
         void loadCollisionManager();
 
-        void handleAI();
+        void handleAI(sf::Time dt);
 
     protected:
         HUD mHUD;
@@ -75,6 +77,9 @@ class World
         CollisionManager mCollisions;
         Base::Ptr mBaseBlue;
         Base::Ptr mBaseRed;
+        sf::Clock mRenderBaseZone;
+        sf::Time mMoneyTime;
+
 
         int mBlueMoney;
         int mRedMoney;

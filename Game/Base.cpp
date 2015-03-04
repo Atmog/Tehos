@@ -15,24 +15,21 @@ Base::Base(Targetable::Team team)
 
 void Base::drawSpawnZone(sf::RenderTarget& target) const
 {
-    if (cf::distance(getPosition(),cf::Application::getWindow().getMousePositionMap()) < 75)
-    {
-        sf::CircleShape c;
-        c.setPosition(getPosition());
-        c.setRadius(mSpawnRadius);
-        c.setPointCount(256);
-        c.setOrigin(mSpawnRadius,mSpawnRadius);
-        c.setOutlineThickness(1);
-        sf::Color color;
-        if (mTeam == Targetable::Red)
-            color = sf::Color::Red;
-        if (mTeam == Targetable::Blue)
-            color = sf::Color::Blue;
-        c.setOutlineColor(color);
-        color.a = 16.f;
-        c.setFillColor(color);
-        target.draw(c);
-    }
+    sf::CircleShape c;
+    c.setPosition(getPosition());
+    c.setRadius(mSpawnRadius);
+    c.setPointCount(256);
+    c.setOrigin(mSpawnRadius,mSpawnRadius);
+    c.setOutlineThickness(1);
+    sf::Color color;
+    if (mTeam == Targetable::Red)
+        color = sf::Color::Red;
+    if (mTeam == Targetable::Blue)
+        color = sf::Color::Blue;
+    c.setOutlineColor(color);
+    color.a = 16.f;
+    c.setFillColor(color);
+    target.draw(c);
 }
 
 void Base::draw(sf::RenderTarget& target, sf::RenderStates states) const
@@ -67,4 +64,18 @@ void Base::setSpawnRadius(float radius)
 float Base::getSpawnRadius() const
 {
     return mSpawnRadius;
+}
+
+void Base::transparence(bool transparent)
+{
+    if (transparent)
+    {
+        sf::Color c = sf::Color::White;
+        c.a = 160.f;
+        mSprite.setColor(c);
+    }
+    else
+    {
+        mSprite.setColor(sf::Color::White);
+    }
 }

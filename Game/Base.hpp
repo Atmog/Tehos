@@ -21,7 +21,10 @@ class Base : public Targetable
         void setSpawnRadius(float radius);
         float getSpawnRadius() const;
 
+        void transparence(bool transparent);
+
     protected:
+        bool mTransparent;
         float mSpawnRadius;
 };
 

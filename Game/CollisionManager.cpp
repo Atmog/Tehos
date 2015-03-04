@@ -50,13 +50,17 @@ void CollisionManager::movementCorrection(CollisionShape::Ptr shape, sf::Vector2
 {
     if (shape == nullptr)
         return;
+    float l = cf::length(movement);
     sf::Vector2f initialPos = shape->getPosition();
-    sf::Vector2f finalPos = initialPos + movement;
-    shape->setPosition(finalPos);
+    shape->setPosition(initialPos + movement);
     for (unsigned int i = 0; i < mCollisions.size(); i++)
         if (mCollisions[i] != nullptr)
             if (mCollisions[i]->intersect(shape))
             {
+                sf::Vector2f mvt = mCollisions[i]->getPosition() - initialPos;
+                cf::normalize(mvt);
+                movement = -mvt * l * 0.5f;
+                shape->setPosition(initialPos + movement);
             }
 }
 
