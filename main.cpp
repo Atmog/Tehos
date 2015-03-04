@@ -4,6 +4,7 @@
 #include "State/MenuState.hpp"
 #include "State/GameState.hpp"
 #include "State/GameModeState.hpp"
+#include "State/GameEndState.hpp"
 
 int main()
 {
@@ -37,6 +38,7 @@ int main()
         app.getStates().registerState<MenuState>(MenuState::getID());
         app.getStates().registerState<GameState>(GameState::getID());
         app.getStates().registerState<GameModeState>(GameModeState::getID());
+        app.getStates().registerState<GameEndState>(GameEndState::getID());
 
         app.getStates().pushState(IntroState::getID());
 

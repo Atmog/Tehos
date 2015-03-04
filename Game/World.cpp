@@ -8,6 +8,9 @@ World::World(World::GameMode mode)
 , mBaseBlue(nullptr)
 , mBaseRed(nullptr)
 {
+    mBlueMoney = 500;
+    mRedMoney = 500;
+
     mBaseBlue = std::make_shared<Base>(Targetable::Blue);
     addTargetable(mBaseBlue);
     mBaseRed = std::make_shared<Base>(Targetable::Red);
@@ -27,34 +30,64 @@ World::World(World::GameMode mode)
 void World::handleEvent(sf::Event const& event)
 {
     // Check HUD
-    for (unsigned int i = 0; i < mSceneNodes.size(); i++)
+    HUD::Action actionHUD = mHUD.handleEvent(event);
+    switch (actionHUD)
     {
-        mSceneNodes[i]->handleEvent(event);
+        /*case :
+        {
+
+        } break;
+
+        case :
+        {
+
+        } break;*/
+
+        default:
+        {
+            for (unsigned int i = 0; i < mSceneNodes.size(); i++)
+            {
+                mSceneNodes[i]->handleEvent(event);
+            }
+
+            if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left)
+            {
+                sf::Vector2f mp = cf::Application::getWindow().getMousePositionView(mView);
+                if (mBlueMoney >= 100 && cf::distance(mp,mBaseBlue->getPosition()) < mBaseBlue->getSpawnRadius())
+                {
+                    mBlueMoney -= 100;
+                    Entity::Ptr e = std::make_shared<Entity>(Targetable::Blue);
+                    e->setPosition(mp);
+                    e->setMaxLife(200);
+                    e->setLife(200);
+                    addTargetable(e);
+                }
+            }
+        }
     }
 
+    // Zoom
     if (event.type == sf::Event::MouseWheelMoved)
     {
-        if (event.mouseWheel.delta >= 1)
+        if (event.mouseWheel.delta < 1)
             mView.zoom(1.2f);
         else
             mView.zoom(0.8f);
     }
+
+    // Handle AI "Event"
+    handleAI();
 }
 
 void World::update(sf::Time dt)
 {
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
-    {
-        return;
-    }
-
-
-
+    // Update Entities
     for (unsigned int i = 0; i < mSceneNodes.size(); i++)
     {
         mSceneNodes[i]->update(dt);
     }
 
+    // View movement
     sf::Vector2f movement;
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Z))
         movement.y--;
@@ -64,7 +97,7 @@ void World::update(sf::Time dt)
         movement.y++;
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))
         movement.x++;
-    mView.move(movement * dt.asSeconds() * 180.f);
+    mView.move(movement * dt.asSeconds() * 300.f);
 
     // Remove dead entities
     mSceneNodes.erase(std::remove_if(mSceneNodes.begin(), mSceneNodes.end(),
@@ -72,40 +105,27 @@ void World::update(sf::Time dt)
     mTargetables.erase(std::remove_if(mTargetables.begin(), mTargetables.end(),
     [](Targetable::Ptr o) { return o->remove(); }), mTargetables.end());
     // TODO : EFFECT ?
-
-
-    // Fin de la game
-    if (mBaseBlue->isDead())
-        loose();
-    if (mBaseRed->isDead())
-        win();
 }
 
 void World::render()
 {
+    // Fix World View
     cf::Application::getWindow().setView(mView);
 
     // Render Floor
     cf::Application::getWindow().draw(mFloor);
 
+    mBaseBlue->drawSpawnZone(cf::Application::getWindow());
+    mBaseRed->drawSpawnZone(cf::Application::getWindow());
+
     // Sort SceneNodes
     std::sort(mSceneNodes.begin(), mSceneNodes.end(),[](SceneNode::Ptr a, SceneNode::Ptr b) -> bool { return a->getPosition().y < b->getPosition().y; });
     // Render SceneNodes
 
-    unsigned int renderedNodes = 0;
-    for (unsigned int i = 0; i < 64; i++)
+    for (int i = 0; i < mMid.getSize().y; i++)
     {
         mMid.render(i,cf::Application::getWindow());
-
-        while (mSceneNodes[0]->getPosition().y >= (i+1) * 16 && mSceneNodes[0]->getPosition().y < (i+2) * 16 && renderedNodes < mSceneNodes.size())
-        {
-            cf::Application::getWindow().draw(*mSceneNodes[0]);
-            mSceneNodes.push_back(mSceneNodes[0]);
-            mSceneNodes.erase(mSceneNodes.begin());
-            renderedNodes++;
-        }
     }
-
     for (unsigned int i = 0; i < mSceneNodes.size(); i++)
     {
         cf::Application::getWindow().draw(*mSceneNodes[i]);
@@ -113,11 +133,66 @@ void World::render()
 
     // Render UpperLevel
 
-    cf::Application::getWindow().draw(mCollisions);
-
+    // Set Normal View
     cf::Application::getWindow().setDefaultView();
 
-    //Render HUD
+    // Draw HUD
+    cf::Application::getWindow().draw(mHUD);
+}
+
+Targetable::Ptr World::findNearestTarget(Targetable* e)
+{
+    Targetable::Team team = e->getTeam();
+    Targetable::Ptr target = nullptr;
+    float actualDistance = 999999;
+    float maxDistance = 1000;
+    for (unsigned int i = 0; i < mTargetables.size(); i++)
+    {
+        float d = cf::distance(mTargetables[i]->getPosition(),e->getPosition());
+        if (d < actualDistance
+        && d < maxDistance
+        && mTargetables[i]->getTeam() != team
+        && mTargetables[i].get() != e
+        && mTargetables[i]->isAlive())
+        {
+            target = mTargetables[i];
+            actualDistance = cf::distance(target->getPosition(),e->getPosition());
+        }
+    }
+    return target;
+}
+
+CollisionManager& World::getCollisionManager()
+{
+    return mCollisions;
+}
+
+World::GameEnd World::getEnd() const
+{
+    if (!mBaseBlue->isDead() && !mBaseRed->isDead())
+        return GameEnd::None;
+
+    if (mBaseBlue->isDead() || mBaseRed->isDead())
+    {
+        // Save data
+    }
+    if (mBaseBlue->isDead())
+    {
+        // Save data
+        return GameEnd::Loose;
+    }
+    else if (mBaseRed->isDead())
+    {
+        // Save data
+        return GameEnd::Win;
+    }
+
+    return GameEnd::None;
+}
+
+World::GameMode World::getMode() const
+{
+    return mMode;
 }
 
 void World::addTargetable(Targetable::Ptr e)
@@ -132,69 +207,10 @@ void World::addTargetable(Targetable::Ptr e)
         mBlueSpawned++;
 }
 
-sf::Time World::getGameTime() const
-{
-    return mClock.getElapsedTime();
-}
-
-Targetable::Ptr World::findNearestTarget(Targetable* e)
-{
-    Targetable::Team team = e->getTeam();
-    Targetable::Ptr target = nullptr;
-    float minDistance = 999999;
-    for (unsigned int i = 0; i < mTargetables.size(); i++)
-    {
-        if (cf::distance(mTargetables[i]->getPosition(),e->getPosition()) < minDistance
-        && mTargetables[i]->getTeam() != team
-        && mTargetables[i].get() != e
-        && mTargetables[i]->isAlive())
-        {
-            target = mTargetables[i];
-            minDistance = cf::distance(target->getPosition(),e->getPosition());
-        }
-    }
-    return target;
-}
-
-CollisionManager& World::getCollisionManager()
-{
-    return mCollisions;
-}
-
 void World::loadSurvival()
 {
-    mBaseBlue->setPosition(1500,1500);
-    mBaseRed->setPosition(2000,2000);
-
-    Entity::Ptr e = std::make_shared<Entity>(Targetable::Blue);
-    e->setPosition(200,300);
-    e->setMaxLife(200);
-    e->setLife(200);
-    addTargetable(e);
-
-    Entity::Ptr e1 = std::make_shared<Entity>(Targetable::Blue);
-    e1->setPosition(500,300);
-    e1->setMaxLife(200);
-    e1->setLife(200);
-    addTargetable(e1);
-
-    Entity::Ptr e4 = std::make_shared<Entity>(Targetable::Blue);
-    e4->setPosition(400,300);
-    e4->setMaxLife(200);
-    e4->setLife(200);
-    addTargetable(e4);
-
-    Entity::Ptr e2 = std::make_shared<Entity>(Targetable::Red);
-    e2->setPosition(500,700);
-    e2->setMaxLife(200);
-    e2->setLife(200);
-    addTargetable(e2);
-
-    Entity::Ptr e3 = std::make_shared<Entity>(Targetable::Red);
-    e3->setPosition(600,700);
-    e3->setMaxLife(200);
-    e3->setLife(200);
-    addTargetable(e3);
+    mBaseBlue->setPosition(520,930);
+    mBaseRed->setPosition(-11111,-11111);
 }
 
 void World::loadDeathMatch()
@@ -203,16 +219,6 @@ void World::loadDeathMatch()
 
 void World::loadDomination()
 {
-}
-
-void World::loose()
-{
-
-}
-
-void World::win()
-{
-
 }
 
 void World::loadMap()
@@ -238,12 +244,12 @@ void World::loadMap()
     for (int x = 0; x < mapSize.x; x++)
     {
         mMid.setTileId(sf::Vector2i(x,0),2);
-        mMid.setTileId(sf::Vector2i(x,63),2);
+        mMid.setTileId(sf::Vector2i(x,mapSize.y-1),2);
     }
     for (int y = 0; y < mapSize.y; y+=2)
     {
         mMid.setTileId(sf::Vector2i(0,y),2);
-        mMid.setTileId(sf::Vector2i(15,y+1),2);
+        mMid.setTileId(sf::Vector2i(mapSize.x-1,y+1),2);
     }
     for (int x = 0; x < mapSize.x; x++)
     {
@@ -251,7 +257,7 @@ void World::loadMap()
         {
             if (cf::random(0,100) > 98)
             {
-                mMid.setTileId(sf::Vector2i(x,y),2);
+                //mMid.setTileId(sf::Vector2i(x,y),2);
             }
         }
     }
@@ -280,4 +286,9 @@ void World::loadCollisionManager()
             }
         }
     }
+}
+
+void World::handleAI()
+{
+
 }

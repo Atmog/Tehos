@@ -3,7 +3,7 @@
 
 #include "../Lib/State.hpp"
 
-#include "MenuState.hpp"
+#include "GameEndState.hpp"
 #include "GameModeState.hpp"
 
 #include "../Game/World.hpp"
@@ -23,7 +23,7 @@ class GameState : public cf::State
         void render();
 
     protected:
-        void toMenu();
+        void toGameEnd(World::GameEnd end);
 
     protected:
         World mWorld;

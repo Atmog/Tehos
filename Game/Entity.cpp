@@ -129,11 +129,16 @@ void Entity::update(sf::Time dt)
             mTarget = nullptr;
         }
 
-        sf::IntRect tRect = sf::IntRect(0,0,61,121);
-        tRect.top = mDirection * 121;
-        tRect.left = static_cast<int>(mMovingTime.asSeconds() * 10) * 61;
-        mSprite.setTextureRect(tRect);
     }
+    else
+    {
+        mMovingTime = sf::Time::Zero;
+    }
+
+    sf::IntRect tRect = sf::IntRect(0,0,61,121);
+    tRect.top = mDirection * 121;
+    tRect.left = static_cast<int>(mMovingTime.asSeconds() * 10) * 61;
+    mSprite.setTextureRect(tRect);
 }
 
 void Entity::draw(sf::RenderTarget& target, sf::RenderStates states) const
@@ -168,6 +173,4 @@ void Entity::draw(sf::RenderTarget& target, sf::RenderStates states) const
         l.setFillColor(sf::Color::Green);
         target.draw(l,states);
     }
-
-    target.draw(*mCollision);
 }

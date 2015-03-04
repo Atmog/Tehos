@@ -4,6 +4,9 @@
 #include "Targetable.hpp"
 
 #include "../Lib/Application.hpp"
+#include "../Lib/Vector.hpp"
+
+#include <SFML/Graphics/CircleShape.hpp>
 
 class Base : public Targetable
 {
@@ -11,6 +14,15 @@ class Base : public Targetable
         typedef std::shared_ptr<Base> Ptr;
 
         Base(Targetable::Team team);
+
+        void drawSpawnZone(sf::RenderTarget& target) const;
+        void draw(sf::RenderTarget& target, sf::RenderStates states) const;
+
+        void setSpawnRadius(float radius);
+        float getSpawnRadius() const;
+
+    protected:
+        float mSpawnRadius;
 };
 
 #endif // BASE_HPP

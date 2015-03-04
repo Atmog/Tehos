@@ -19,6 +19,7 @@
 #include "Base.hpp"
 #include "CollisionManager.hpp"
 #include "CollisionShape.hpp"
+#include "HUD.hpp"
 
 class World
 {
@@ -30,32 +31,40 @@ class World
             Domination,
         };
 
+        enum GameEnd
+        {
+            None = 0,
+            Win,
+            Loose,
+        };
+
         World(GameMode mode);
 
         void handleEvent(sf::Event const& event);
         void update(sf::Time dt);
         void render();
 
-        void addTargetable(Targetable::Ptr t);
-
-        sf::Time getGameTime() const;
-
         Targetable::Ptr findNearestTarget(Targetable* e);
 
         CollisionManager& getCollisionManager();
 
+        GameEnd getEnd() const;
+        GameMode getMode() const;
+
     protected:
+        void addTargetable(Targetable::Ptr t);
+
         void loadSurvival();
         void loadDeathMatch();
         void loadDomination();
 
-        void loose();
-        void win();
-
         void loadMap();
         void loadCollisionManager();
 
+        void handleAI();
+
     protected:
+        HUD mHUD;
         GameMode mMode;
         sf::View mView;
         sf::Clock mClock;
@@ -66,6 +75,9 @@ class World
         CollisionManager mCollisions;
         Base::Ptr mBaseBlue;
         Base::Ptr mBaseRed;
+
+        int mBlueMoney;
+        int mRedMoney;
 
         unsigned int mBlueSpawned;
         unsigned int mRedSpawned;
