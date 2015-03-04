@@ -213,7 +213,7 @@ CollisionManager& World::getCollisionManager()
     return mCollisions;
 }
 
-World::GameEnd World::getEnd() const
+World::GameEnd World::getEnd()
 {
     if (!mBaseBlue->isDead() && !mBaseRed->isDead())
         return GameEnd::None;
@@ -224,11 +224,23 @@ World::GameEnd World::getEnd() const
     }
     if (mBaseBlue->isDead())
     {
+        ExplosionEffect::Ptr expl = std::make_shared<ExplosionEffect>();
+        expl->setPosition(mBaseBlue->getPosition());
+        mSceneNodes.push_back(expl);
+
+        // TODO : Sound
+
         // Save data
         return GameEnd::Loose;
     }
     else if (mBaseRed->isDead())
     {
+        ExplosionEffect::Ptr expl = std::make_shared<ExplosionEffect>();
+        expl->setPosition(mBaseBlue->getPosition());
+        mSceneNodes.push_back(expl);
+
+        // TODO : Sound
+
         // Save data
         return GameEnd::Win;
     }

@@ -15,6 +15,10 @@ void rotate(sf::Vector2f& v, float deg);
 
 void normalize(sf::Vector2f& vector);
 
+sf::Vector2f normalizedVector(sf::Vector2f vector);
+
+float getAngle(sf::Vector2f vector);
+
 }
 
 #endif // CONFICIA_VECTOR_HPP

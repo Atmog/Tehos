@@ -6,6 +6,8 @@
 #include "GameEndState.hpp"
 #include "GameModeState.hpp"
 
+#include <SFML/System/Clock.hpp>
+
 #include "../Game/World.hpp"
 
 class GameState : public cf::State
@@ -27,6 +29,9 @@ class GameState : public cf::State
 
     protected:
         World mWorld;
+        World::GameEnd mEnd;
+        bool mGameEnded;
+        sf::Clock mGameEndClock;
 
 };
 

@@ -11,18 +11,14 @@ class Effect : public SceneNode
     public:
         typedef std::shared_ptr<Effect> Ptr;
 
-        Effect();
-
-        sf::Sprite& getSprite();
-
-        void setLimit(sf::Time limit);
-        sf::Time getLimit() const;
-        sf::Time getActualTime() const;
-
+        Effect(sf::Int64 frames = 0, sf::Time timePerFrame = sf::Time::Zero);
+        virtual void update(sf::Time dt);
         virtual bool remove() const;
 
     protected:
-        sf::Time mLimit;
+        const sf::Int64 mFrames;
+        const sf::Time mTimePerFrame;
+        sf::Vector2i mFrameSize;
         sf::Clock mClock;
 };
 

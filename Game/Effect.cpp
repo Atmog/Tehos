@@ -1,31 +1,19 @@
 #include "Effect.hpp"
 
-Effect::Effect()
+Effect::Effect(sf::Int64 frames, sf::Time timePerFrame)
+: mFrames(frames)
+, mTimePerFrame(timePerFrame)
 {
-    mLimit = sf::Time::Zero;
 }
 
-sf::Sprite& Effect::getSprite()
+void Effect::update(sf::Time dt)
 {
-    return mSprite;
-}
-
-void Effect::setLimit(sf::Time limit)
-{
-    mLimit = limit;
-}
-
-sf::Time Effect::getLimit() const
-{
-    return mLimit;
-}
-
-sf::Time Effect::getActualTime() const
-{
-    return mClock.getElapsedTime();
+    mSprite.setTextureRect(sf::IntRect(
+    sf::Vector2i(static_cast<int>(mClock.getElapsedTime()/mTimePerFrame) * mFrameSize.x,0),
+    mFrameSize));
 }
 
 bool Effect::remove() const
 {
-    return getActualTime() > getLimit();
+    return mClock.getElapsedTime() > mFrames * mTimePerFrame;
 }

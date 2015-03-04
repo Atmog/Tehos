@@ -4,6 +4,7 @@ GameState::GameState(cf::StateManager& manager)
 : cf::State(manager)
 , mWorld(GameModeState::getGameMode(cf::Application::getData().get("gamemode")))
 {
+    mGameEnded = false;
 }
 
 bool GameState::handleEvent(sf::Event const& event)
@@ -16,10 +17,19 @@ bool GameState::update(sf::Time dt)
 {
     mWorld.update(dt);
 
-    World::GameEnd end = mWorld.getEnd();
-    if (end != World::GameEnd::None)
+    if (!mGameEnded)
     {
-        toGameEnd(end);
+        mEnd = mWorld.getEnd();
+        if (mEnd != World::GameEnd::None)
+        {
+            mGameEnded = true;
+        }
+        mGameEndClock.restart();
+    }
+
+    if (mGameEnded && mGameEndClock.getElapsedTime() >= sf::seconds(3))
+    {
+        toGameEnd(mEnd);
     }
 
     return true;

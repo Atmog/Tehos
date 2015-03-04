@@ -38,6 +38,19 @@ Weapon* Entity::getWeapon() const
 
 void Entity::handleEvent(sf::Event const& event)
 {
+    if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Right)
+    {
+        if (mTeam == Targetable::Team::Blue)
+        {
+            restore(10);
+            // TODO : HealingEffect
+        }
+        if (mTeam == Targetable::Team::Red)
+        {
+            inflige(10);
+            // TODO : DamageEffect
+        }
+    }
 }
 
 void Entity::update(sf::Time dt)

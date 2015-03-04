@@ -27,4 +27,14 @@ void normalize(sf::Vector2f& vector)
     vector.y /= length;
 }
 
+sf::Vector2f normalizedVector(sf::Vector2f vector)
+{
+    return sf::Vector2f(vector.x/cf::length(vector),vector.y/cf::length(vector));
+}
+
+float getAngle(sf::Vector2f vector)
+{
+    return cf::atan2(vector.y,vector.x);
+}
+
 }

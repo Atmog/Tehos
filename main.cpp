@@ -22,6 +22,8 @@ int main()
         cf::Application::getResources().loadTexture("Assets/Textures/baseblue.png");
         cf::Application::getResources().loadTexture("Assets/Textures/gui.png");
         //cf::Application::getResources().loadTexture("Assets/Textures/weapons.png");
+        cf::Application::getResources().loadTexture("Assets/Textures/explosion.png");
+        cf::Application::getResources().getTexture("Assets/Textures/explosion.png").setSmooth(true);
 
         cf::Application::getResources().loadFont("Assets/Fonts/sansation.ttf");
 

@@ -20,6 +20,7 @@
 #include "CollisionManager.hpp"
 #include "CollisionShape.hpp"
 #include "HUD.hpp"
+#include "ExplosionEffect.hpp"
 
 class World
 {
@@ -48,7 +49,7 @@ class World
 
         CollisionManager& getCollisionManager();
 
-        GameEnd getEnd() const;
+        GameEnd getEnd();
         GameMode getMode() const;
 
         void addMoney(Targetable::Team team, int amount);
