@@ -1,54 +1,109 @@
-#include "Lib/Application.hpp"
+#include "Application/System.hpp"
+#include "Application/Application.hpp"
 
-#include "State/IntroState.hpp"
-#include "State/MenuState.hpp"
-#include "State/GameState.hpp"
-#include "State/GameModeState.hpp"
-#include "State/GameEndState.hpp"
+#include "Game/Game.hpp"
+
+#include <iostream>
+
+/// ADD YOUR STATES HERE
+
+#include "States/SplashScreen.hpp"
+#include "States/Menu.hpp"
+#include "States/GameState.hpp"
+#include "States/FinalState.hpp"
+#include "States/Help.hpp"
+#include "States/Settings.hpp"
+#include "States/Pause.hpp"
+#include "States/Bonus.hpp"
+
+/// ADD YOUR STATES HERE
 
 int main()
 {
     try
     {
-        cf::Application app;
+        std::string appName = "Tehos";
 
-        // -> Chargement des resources
-        cf::Application::getResources().loadTexture("Assets/Textures/playerblue.png");
-        cf::Application::getResources().getTexture("Assets/Textures/playerblue.png").setSmooth(true);
-        cf::Application::getResources().loadTexture("Assets/Textures/playerred.png");
-        cf::Application::getResources().getTexture("Assets/Textures/playerred.png").setSmooth(true);
-        cf::Application::getResources().loadTexture("Assets/Textures/tileset.png");
-        cf::Application::getResources().loadTexture("Assets/Textures/basered.png");
-        cf::Application::getResources().loadTexture("Assets/Textures/baseblue.png");
-        cf::Application::getResources().loadTexture("Assets/Textures/gui.png");
-        //cf::Application::getResources().loadTexture("Assets/Textures/weapons.png");
-        cf::Application::getResources().loadTexture("Assets/Textures/explosion.png");
-        cf::Application::getResources().getTexture("Assets/Textures/explosion.png").setSmooth(true);
+        app::System::init(appName);
+        Game::init();
 
-        cf::Application::getResources().loadFont("Assets/Fonts/sansation.ttf");
 
-        // -> Parametrage de la fenetre
-        // -> Gestion des Log
-        // -> Gestion de l'audio
-        // -> Gestion des Statistics
-        // -> ...
-        // -> Enfin bref, tout ce qui est plus ou moins une partie de l'Application
+        app::System::getWindow().create(800,600,appName,sf::Style::Close);
 
-        app.getWindow().create(800,600,sf::Style::Close);
 
-        app.getStates().registerState<IntroState>(IntroState::getID());
-        app.getStates().registerState<MenuState>(MenuState::getID());
-        app.getStates().registerState<GameState>(GameState::getID());
-        app.getStates().registerState<GameModeState>(GameModeState::getID());
-        app.getStates().registerState<GameEndState>(GameEndState::getID());
+        /// ADD YOUR TEXTURE HERE
+        if (!app::System::getResources().loadTexture("Cursor","Assets/Textures/cursor.png"))
+        {
+            app::System::getLog() << "Texture Cursor Failed";
+            std::cout << "Texture Cursor failed" << std::endl;
+            return 0;
+        }
+        if (!app::System::getResources().loadTexture("Skeleton","Assets/Textures/skeleton.png"))
+        {
+            app::System::getLog() << "Texture Skeleton Failed";
+            std::cout << "Texture Skeleton failed" << std::endl;
+            return 0;
+        }
+        if (!app::System::getResources().loadTexture("Soldier","Assets/Textures/soldier.png"))
+        {
+            app::System::getLog() << "Texture Soldier Failed";
+            std::cout << "Texture Soldier failed" << std::endl;
+            return 0;
+        }
+        if (!app::System::getResources().loadTexture("Weapons","Assets/Textures/weapons.png"))
+        {
+            app::System::getLog() << "Texture Weapons Failed";
+            std::cout << "Texture Weapons failed" << std::endl;
+            return 0;
+        }
+        if (!app::System::getResources().loadTexture("Map","Assets/Textures/map.png"))
+        {
+            app::System::getLog() << "Texture Map Failed";
+            std::cout << "Texture Map failed" << std::endl;
+            return 0;
+        }
+        if (!app::System::getResources().loadTexture("GUI","Assets/Textures/gui.png"))
+        {
+            app::System::getLog() << "Texture GUI Failed";
+            std::cout << "Texture GUI failed" << std::endl;
+            return 0;
+        }
+        if (!app::System::getResources().loadTexture("Help","Assets/Textures/helpBox.png"))
+        {
+            app::System::getLog() << "Texture h Failed";
+            std::cout << "Texture h failed" << std::endl;
+            return 0;
+        }
 
-        app.getStates().pushState(IntroState::getID());
+        /// ADD YOUR FONT HERE
+        if (!app::System::getResources().loadFont("Sansation","Assets/Fonts/sansation.ttf"))
+        {
+            app::System::getLog() << "Font Sansation Failed";
+            std::cout << "Font Sansation failed" << std::endl;
+            return 0;
+        }
 
+        app::System::getWindow().setMouseCursorTexture(app::System::getResources().getTexture("Cursor"));
+        app::System::getWindow().useCustomMouseCursor();
+
+        app::Application app;
+        app.registerState<SplashScreen>(SplashScreen::getID());
+        app.registerState<Menu>(Menu::getID());
+        app.registerState<GameState>(GameState::getID());
+        app.registerState<FinalState>(FinalState::getID());
+        app.registerState<Help>(Help::getID());
+        app.registerState<Settings>(Settings::getID());
+        app.registerState<Pause>(Pause::getID());
+        app.registerState<Bonus>(Bonus::getID());
+        app.setState(SplashScreen::getID());
         app.run();
     }
     catch(std::exception& e)
     {
         std::cerr << e.what() << std::endl;
     }
+
+    Game::release();
+    app::System::release();
     return EXIT_SUCCESS;
 }

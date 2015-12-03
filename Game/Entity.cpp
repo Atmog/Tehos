@@ -1,200 +1,309 @@
 #include "Entity.hpp"
-#include "World.hpp"
+#include "EntityManager.hpp"
 
-Entity::Entity(Targetable::Team team)
-{
-    mTeam = team;
-    if (mTeam == Targetable::Blue)
-    {
-        mSprite.setTexture(cf::Application::getResources().getTexture("Assets/Textures/playerblue.png"));
-    }
-    else
-    {
-        mSprite.setTexture(cf::Application::getResources().getTexture("Assets/Textures/playerred.png"));
-    }
-    mDirection = Entity::S;
-    mSprite.setTextureRect(sf::IntRect(0,mDirection*121,61,121));
-    mSprite.setOrigin(sf::Vector2f(30.5,121));
-    mSpeed = 100.f;
-    mMaxLife = 200.f;
-    mLife = 200.f;
-    mWeapon = nullptr;
-    mCollision->setPointCount(4);
-    mCollision->setPoint(0,sf::Vector2f(-10,-10));
-    mCollision->setPoint(1,sf::Vector2f(10,-10));
-    mCollision->setPoint(2,sf::Vector2f(10,5));
-    mCollision->setPoint(3,sf::Vector2f(-10,5));
-}
+#include <iostream>
 
-void Entity::setWeapon(Weapon* weapon)
+Entity::Entity(EntityManager* manager) : mManager(manager)
 {
-    mWeapon = weapon;
-}
-
-Weapon* Entity::getWeapon() const
-{
-    return mWeapon;
-}
-
-void Entity::handleEvent(sf::Event const& event)
-{
-    if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Right)
-    {
-        if (mTeam == Targetable::Team::Blue)
-        {
-            restore(10);
-            // TODO : HealingEffect
-        }
-        if (mTeam == Targetable::Team::Red)
-        {
-            inflige(10);
-            // TODO : DamageEffect
-        }
-    }
+    mLife = 100;
+    mMaxLife = mLife;
+    mSpeed = 60;
+    mDamage = 10;
+    mDirection = Direction::S;
+    mMovingTime = sf::Time::Zero;
+    mCooldownTimer = sf::seconds(0.4f);
 }
 
 void Entity::update(sf::Time dt)
 {
-    if (mTarget != nullptr)
-        if (mTarget->isDead())
-            mTarget = nullptr;
+}
 
-    if (mTarget == nullptr && mWorld != nullptr)
-        mTarget = mWorld->findNearestTarget(this);
+void Entity::handleEvent(sf::Event const& event)
+{
+}
 
-    if (mTarget != nullptr && mWorld != nullptr)
-    {
-        Targetable::Ptr target = mWorld->findNearestTarget(this);
-        if (target != mTarget && cf::distance(mTarget->getPosition(),getPosition()) > cf::distance(target->getPosition(),getPosition()) + 10.f)
-            mTarget = target;
-    }
+int Entity::getLife()
+{
+    return mLife;
+}
 
-    if (mTarget != nullptr && mWorld != nullptr)
-    {
-        sf::Vector2f movement = sf::Vector2f(0,0);
+int Entity::getMaxLife()
+{
+    return mMaxLife;
+}
 
-        sf::Vector2f diff = mTarget->getPosition() - getPosition();
-        float angle = - cf::atan2(diff.y,diff.x);
-        while(angle >= 360)
-            angle -= 360;
-        while(angle < 0)
-            angle += 360;
-        if((angle > 0 && angle < 22.5) || (angle >= 337.5 && angle < 360))
-            mDirection = Entity::E;
-        else if(angle >= 22.5 && angle < 67.5)
-            mDirection = Entity::NE;
-        else if(angle >= 67.5 && angle < 112.5)
-            mDirection = Entity::N;
-        else if(angle >= 112.5 && angle < 157.5)
-            mDirection = Entity::NW;
-        else if(angle >= 157.5 && angle < 202.5)
-            mDirection = Entity::W;
-        else if(angle >= 202.5 && angle < 247.5)
-            mDirection = Entity::SW;
-        else if(angle >= 247.5 && angle < 292.5)
-            mDirection = Entity::S;
-        else if(angle >= 292.5 && angle < 337.5)
-            mDirection = Entity::SE;
+int Entity::getSpeed()
+{
+    return mSpeed;
+}
 
-        movement.x = cf::cos(angle) * mSpeed * dt.asSeconds();
-        movement.y = cf::sin(-angle) * mSpeed * dt.asSeconds();
+int Entity::getDamage()
+{
+    return mDamage;
+}
 
-        if (mWeapon != nullptr)
-            if (cf::distance(mTarget->getPosition(),getPosition()) < mWeapon->getRange())
-                movement = sf::Vector2f(0,0);
-        if (mWeapon == nullptr)
-            if (cf::distance(mTarget->getPosition(),getPosition()) < 50)
-                movement = sf::Vector2f(0,0);
+void Entity::setLife(int life)
+{
+    mLife = std::min(life,mMaxLife);
+}
 
-        if (movement != sf::Vector2f(0,0))
-        {
-            mCollision->setPosition(getPosition());
-            mWorld->getCollisionManager().movementCorrection(mCollision,movement);
-            move(movement);
-            mMovingTime += dt;
-        }
-        else
-        {
-            mMovingTime = sf::Time::Zero;
-            // TODO : PLAY SOUND ?
-        }
+void Entity::setMaxLife(int maxLife)
+{
+    mMaxLife = maxLife;
+}
 
-        if (mMovingTime > sf::seconds(0.8f))
-            mMovingTime = sf::Time::Zero;
+void Entity::setSpeed(int speed)
+{
+    mSpeed = speed;
+}
 
-        if (mWeapon != nullptr)
-        {
-            if (mLastAttack.getElapsedTime() > sf::seconds(1) && cf::distance(mTarget->getPosition(),getPosition()) < mWeapon->getRange())
-            {
-                mTarget->inflige(mWeapon->getForce());
-                mLastAttack.restart();
-                // TODO : ANIMATION
-                // TODO : PLAY SOUND ?
-            }
-        }
-        else
-        {
-            if (mLastAttack.getElapsedTime() > sf::seconds(1) && cf::distance(mTarget->getPosition(),getPosition()) < 50)
-            {
-                mTarget->inflige(20);
-                mLastAttack.restart();
-                // TODO : ANIMATION
-                // TODO : PLAY SOUND ?
-            }
-        }
+void Entity::setDamage(int damage)
+{
+    mDamage = damage;
+}
 
-        if (mTarget->isDead()) // On l'a kill
-        {
-            // TODO : PLAY SOUND ?
-            // TODO : EFFECT ?
-            mTarget = nullptr;
-            mWorld->addMoney(mTeam, 100);
-        }
+void Entity::inflige(int damage)
+{
+    mLife -= damage;
+    mLife = std::max(mLife,0);
+    mLife = std::min(mLife,mMaxLife);
+}
 
-    }
-    else
-    {
-        mMovingTime = sf::Time::Zero;
-    }
+void Entity::heal(int heal)
+{
+    mLife += heal;
+    mLife = std::min(mLife,mMaxLife);
+    mLife = std::max(mLife,0);
+}
 
-    sf::IntRect tRect = sf::IntRect(0,0,61,121);
-    tRect.top = mDirection * 121;
-    tRect.left = static_cast<int>(mMovingTime.asSeconds() * 10) * 61;
-    mSprite.setTextureRect(tRect);
+bool Entity::isDead()
+{
+    return mLife <= 0;
+}
+
+bool Entity::isAttacking()
+{
+    return mCooldownTimer != sf::seconds(0.4f);
+}
+
+sf::FloatRect Entity::getBounds() const
+{
+    return sf::FloatRect(getPosition().x - getOrigin().x, getPosition().y - getOrigin().y, mSprite.getGlobalBounds().width,mSprite.getGlobalBounds().height);
 }
 
 void Entity::draw(sf::RenderTarget& target, sf::RenderStates states) const
 {
     states.transform *= getTransform();
 
-    target.draw(*mCollision);
-
-    if (mWeapon != nullptr && (mDirection == Entity::N || mDirection == Entity::NW))
+    if (mDirection == Direction::N)
     {
-        target.draw(*mWeapon,states);
+        target.draw(mWeapon);
     }
 
     target.draw(mSprite,states);
 
-    if (mWeapon != nullptr && mDirection != Entity::N && mDirection != Entity::NW)
+    if (mDirection != Direction::N)
     {
-        target.draw(*mWeapon,states);
+        target.draw(mWeapon);
     }
 
     if (mLife < mMaxLife)
     {
         sf::RectangleShape bg;
+        bg.setPosition(mSprite.getGlobalBounds().width/2 - 15,0);
         bg.setSize(sf::Vector2f(30,7));
-        bg.setPosition(sf::Vector2f(-15,-105));
         bg.setFillColor(sf::Color::Red);
         bg.setOutlineThickness(1);
         bg.setOutlineColor(sf::Color::Black);
         target.draw(bg,states);
-
         sf::RectangleShape l;
+        l.setPosition(mSprite.getGlobalBounds().width/2 - 15,0);
         l.setSize(sf::Vector2f(30.f * static_cast<float>(mLife) / static_cast<float>(mMaxLife),7));
-        l.setPosition(sf::Vector2f(-15,-105));
         l.setFillColor(sf::Color::Green);
         target.draw(l,states);
     }
+}
+
+void Entity::attack(Entity* entity)
+{
+    if (!isAttacking())
+    {
+        if (entity != nullptr)
+        {
+
+            entity->inflige(mDamage + mWeapon.getDamage());
+
+            mCooldownTimer = sf::seconds(0);
+
+        }
+    }
+}
+
+void Entity::updateDirection(sf::Vector2f goTo)
+{
+    sf::Vector2f diff = goTo - getPosition();
+    float angle = - atan2(diff.y,diff.x) * 180 / 3.14159265;
+    while(angle >= 360)
+        angle -= 360;
+    while(angle < 0)
+        angle += 360;
+    if((angle > 0 && angle < 45) || (angle >= 315 && angle < 360))
+        mDirection = Direction::E;
+    else if(angle >= 45 && angle < 135)
+        mDirection = Direction::N;
+    else if(angle >= 135 && angle < 225)
+        mDirection = Direction::W;
+    else if (angle >= 225 && angle < 315)
+        mDirection = Direction::S;
+}
+
+void Entity::updateMovement(sf::Vector2f goTo, sf::Time dt)
+{
+    sf::Vector2f movement;
+    sf::Vector2f diff = goTo - getPosition();
+    float angle = atan2(diff.y,diff.x);
+    movement = sf::Vector2f(std::cos(angle),std::sin(angle));
+    movement.x *= mSpeed;
+    movement.y *= mSpeed;
+    movement *= dt.asSeconds();
+    move(movement);
+}
+
+void Entity::updateAnimation(sf::Time dt)
+{
+    mMovingTime += dt;
+
+    if (mMovingTime >= sf::seconds(0.8))
+    {
+        mMovingTime -= sf::seconds(0.8);
+    }
+
+    int value = 0;
+    if ((mMovingTime >= sf::seconds(0) && mMovingTime < sf::seconds(0.1))
+    || (mMovingTime >= sf::seconds(0.35) && mMovingTime < sf::seconds(0.45))
+    || (mMovingTime >= sf::seconds(0.7) && mMovingTime < sf::seconds(0.8)))
+    {
+        value = 0;
+    }
+    else if (mMovingTime >= sf::seconds(0.1) && mMovingTime < sf::seconds(0.35))
+    {
+        value = 1;
+    }
+    else if (mMovingTime >= sf::seconds(0.45) && mMovingTime < sf::seconds(0.7))
+    {
+        value = 2;
+    }
+
+    mSprite.setTextureRect(sf::IntRect(mSprite.getGlobalBounds().width * value,mSprite.getGlobalBounds().height * static_cast<int>(mDirection),mSprite.getGlobalBounds().width,mSprite.getGlobalBounds().height));
+}
+
+void Entity::stopMoving()
+{
+    mMovingTime = sf::Time::Zero;
+    mSprite.setTextureRect(sf::IntRect(0,mSprite.getGlobalBounds().height * static_cast<int>(mDirection),mSprite.getGlobalBounds().width,mSprite.getGlobalBounds().height));
+}
+
+void Entity::updateWeapon(sf::Time dt)
+{
+    if (isAttacking())
+    {
+        mCooldownTimer += dt;
+        if (mCooldownTimer > sf::seconds(0.4))
+        {
+            mCooldownTimer = sf::seconds(0.4);
+        }
+    }
+
+    if (mWeapon.getType() == Weapon::Nothing)
+        return;
+
+    sf::Vector2f pos = sf::Vector2f(0,0);
+    float angle = 0.f;
+    if (mMovingTime != sf::Time::Zero) // Moving
+    {
+        if ((mMovingTime >= sf::seconds(0) && mMovingTime < sf::seconds(0.1))
+        || (mMovingTime >= sf::seconds(0.35) && mMovingTime < sf::seconds(0.45))
+        || (mMovingTime >= sf::seconds(0.7) && mMovingTime < sf::seconds(0.8)))
+        {
+            switch (mDirection)
+            {
+                case E: pos = sf::Vector2f(12-13.5,7); angle = 45; break;
+                case N: pos = sf::Vector2f(24-13.5,4); angle = 30; break;
+                case W: pos = sf::Vector2f(10-13.5,3); angle = -45; break;
+                case S: pos = sf::Vector2f(2-13.5,4); angle = -30; break;
+                default: app::System::getLog() << "Unknown direction"; break;
+            }
+        }
+        else if (mMovingTime >= sf::seconds(0.1) && mMovingTime < sf::seconds(0.35))
+        {
+            switch (mDirection)
+            {
+                case E: pos = sf::Vector2f(0.5,4); angle = 60; break;
+                case N: pos = sf::Vector2f(9.5,4); angle = 20; break;
+                case W: pos = sf::Vector2f(-2.5,3); angle = -60; break;
+                case S: pos = sf::Vector2f(-9.5,3); angle = -20; break;
+                default: app::System::getLog() << "Unknown direction"; break;
+            }
+        }
+        else if (mMovingTime >= sf::seconds(0.45) && mMovingTime < sf::seconds(0.7))
+        {
+            switch (mDirection)
+            {
+                case E: pos = sf::Vector2f(-5.5,6); angle = 60; break;
+                case N: pos = sf::Vector2f(-9.5,2); angle = 20; break;
+                case W: pos = sf::Vector2f(-1.5,4); angle = -60; break;
+                case S: pos = sf::Vector2f(-9.5,4);angle = -20; break;
+                default: app::System::getLog() << "Unknown direction"; break;
+            }
+        }
+    }
+    else if (isAttacking()) // Attack
+    {
+        if (mCooldownTimer < sf::seconds(0.2f))
+        {
+            switch (mDirection)
+            {
+                case E: pos = sf::Vector2f(-1.5,7); angle = 45 + std::min(45 * mCooldownTimer.asSeconds()/0.1f,45.f); break;
+                case N: pos = sf::Vector2f(10.5,4); angle = 30 + std::min(45 * mCooldownTimer.asSeconds()/0.1f,45.f); break;
+                case W: pos = sf::Vector2f(-3.5,3); angle = -45 - std::min(45 * mCooldownTimer.asSeconds()/0.1f,45.f); break;
+                case S: pos = sf::Vector2f(-11.5,4); angle = -30 - std::min(45 * mCooldownTimer.asSeconds()/0.1f,45.f); break;
+                default: app::System::getLog() << "Unknown direction"; break;
+            }
+        }
+        else
+        {
+            switch (mDirection)
+            {
+                case E: pos = sf::Vector2f(-1.5,7); angle = 45 - std::min(45 * mCooldownTimer.asSeconds()/0.1f,45.f); break;
+                case N: pos = sf::Vector2f(10.5,4); angle = 30 - std::min(45 * mCooldownTimer.asSeconds()/0.1f,45.f); break;
+                case W: pos = sf::Vector2f(-3.5,3); angle = -45 + std::min(45 * mCooldownTimer.asSeconds()/0.1f,45.f); break;
+                case S: pos = sf::Vector2f(-11.5,4); angle = -30 + std::min(45 * mCooldownTimer.asSeconds()/0.1f,45.f); break;
+                default: app::System::getLog() << "Unknown direction"; break;
+            }
+        }
+    }
+    else // Standing
+    {
+        switch (mDirection)
+        {
+            case E: pos = sf::Vector2f(-1.5,7); angle = 45; break;
+            case N: pos = sf::Vector2f(10.5,4); angle = 30; break;
+            case W: pos = sf::Vector2f(-3.5,3); angle = -45; break;
+            case S: pos = sf::Vector2f(-11.5,4); angle = -30; break;
+            default: app::System::getLog() << "Unknown direction"; break;
+        }
+    }
+
+    mWeapon.setPosition(getPosition() + pos);
+    mWeapon.setRotation(angle);
+}
+
+void Entity::setWeaponType(Weapon::Type type)
+{
+    mWeapon.setType(type);
+}
+
+Weapon::Type Entity::getWeaponType()
+{
+    return mWeapon.getType();
 }
